@@ -37,9 +37,12 @@ def solve(coefficients: List[List], ans: list, epsilo: float = 0.01, max_iter_co
                 q = diff
             roots[i] = xi
 
+        print(f'Вектор {k}: {diff}')
+
     if k > max_iter_count:
         print('Итерация расходится')
     else:
+        print(f'Итераций произведено: {k}')
         return [round(e, 2) for e in roots]
 
 
@@ -123,5 +126,4 @@ if __name__ == '__main__':
         a = m[i][i]
         m[i] = [-m[i][j]/a for j in range(len(m[i]))]
 
-    print('Вектор решений равен:')
     print(solve([e[:-1] for e in m], d))
