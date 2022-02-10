@@ -1,59 +1,30 @@
+# Neevin Kirill
+# variant number: 12
+# Метод Гаусса-Зейделя
+
 import itertools
 import sys
 from copy import deepcopy
 from typing import List
 
-# Neevin Kirill
-# variant number: 12
-# Метод Гаусса-Зейделя
+
+def norm(matrix: List[List]) -> float:  # Находит норму матрицы и определяет сходится ли
+    return max([sum(map(lambda x: abs(x), row)) for row in matrix]) <= 1
 
 
-def determinant(m: List[List]) -> float:
-    ans = 0
-    for x in range(len(m)): # передвигаемся по оси x
-        mul_pl, mul_mn = 1, 1
-        for j in range(len(m)): # перемножаем элементы по диагонали
-            mul_pl *= m[j][j-x]
-            mul_mn *= m[j-x][-j]
-        ans += mul_pl - mul_mn
-    return ans
-
-
-def norm(m: List[List]) -> float:  # Находит норму матрицы и определяет сходится ли
-    return max([
-        sum(map(lambda x: abs(x), row)) for row in m
-    ]) <= 1
-
-
-def print_matrix(m: List[List]) -> None:
-    for e in m:
+def print_matrix(matrix: List[List]) -> None:
+    for e in matrix:
         print(e)
     print()
 
 
-def input_matrix():
-    e = int(input('Введите погрешность: '))
-    n = int(input('Введите количество уравнений: '))
-    print('Введите коэффициенты уравнения при x и свободные члены: ')
-    m = [list(map(int, input(f'Строка {i+1}: ').split())) for i in range(n)]
+def solve(coefficients: List[List], ans: list, epsilo: float = 0.01, max_iter_count: float = 100):
+    n, k, q = len(coefficients), 0, epsilo
+    roots = deepcopy(ans)
 
-    print_matrix(m)
-
-
-def solve(coefficients: List[List], ans: list, epsilo: float, max_iter_count: float):
-    # a - коэффициенты системы
-    # e - погрешность
-    # m - максимальное количество итераций
-
-    n = len(coefficients)
-    roots = deepcopy(ans)  # берём последний столбец матрицы
-
-    k = 0
-    q = epsilo
     while k < max_iter_count and q >= epsilo:
         k += 1
         q = 0
-
         for i in range(n):
             s = 0
             for j in range(n):
@@ -65,19 +36,19 @@ def solve(coefficients: List[List], ans: list, epsilo: float, max_iter_count: fl
             if diff > q:
                 q = diff
             roots[i] = xi
-        print(k, diff, roots)
+
     if k > max_iter_count:
         print('Итерация расходится')
     else:
-        return roots
+        return [round(e, 2) for e in roots]
 
 
-def check(m) -> bool:  # Проверить выполнилось ли условие преобладания диагональных элементов
-    n = len(m)
+def check(matrix: List[List]) -> bool:  # Проверить выполнилось ли условие преобладания диагональных элементов
+    n = len(matrix)
     for i in range(n):  # строка
         ok = True
         for j in range(n):  # столбец
-            if abs(m[i][i]) < abs(m[i][j]):
+            if abs(matrix[i][i]) < abs(matrix[i][j]):
                 ok = False
                 break
         if not ok:
@@ -85,31 +56,39 @@ def check(m) -> bool:  # Проверить выполнилось ли усло
     return True
 
 
-def reorder_matrix():  # Переставить элементы матрицы так, чтобы выполнялось условие пробл. диаг. эл-ов
+def reorder_matrix():  # Переставить строки матрицы так, чтобы выполнялось условие пробл. диаг. эл-ов
     for perm in itertools.permutations(m):
         if check(perm):
             return list(perm)
     return None
 
 
+def input_matrix():
+    epsilon = float(input('Введите погрешность: '))
+    n = int(input('Введите количество уравнений: '))
+    print('Введите коэф. ур-я при x и свободные члены: x_11 x_12 ... = b1')
+    coeffs = [list(map(float, input(f'Строка {z+1}: ').split())) for z in range(n)]
+
+    return epsilon, n, coeffs
+
+
+def read_file():
+    path = input('Введите путь к файлу: ')
+    with open(path, 'r') as f:
+        epsilon = float(f.readline())
+        n = int(f.readline())
+        matrix = []
+        for i in range(n):
+            matrix.append(list(map(float, f.readline().split())))
+        return epsilon, n, matrix
+
+
 if __name__ == '__main__':
-    # input_matrix()
-    m = [
-        [2, 2, 10, 14],
-        [10, 1, 1, 12],
-        [2, 10, 1, 13],
-    ]
-
-    # m = [
-    #     [16, 12, 300],
-    #     [-3, 6, 90],
-    # ]
-
-    # m = [
-    #     [2, 3, 4, -8],
-    #     [1, 3, 6, 0],
-    #     [5, 7, 2, -27]
-    # ]
+    read_from = input('Прочитать матрицу из файла (f) или с клавиатуры (k)?: ')
+    if read_from == 'f':
+        e, n , m = read_file()
+    else:
+        e, n, m = input_matrix()
 
     print('Исходная матрица: ')
     print_matrix(m)
@@ -144,7 +123,5 @@ if __name__ == '__main__':
         a = m[i][i]
         m[i] = [-m[i][j]/a for j in range(len(m[i]))]
 
-    print('Вот:')
-    print([e[:-1] for e in m])
-    print([e[-1] for e in m])
-    print(solve([e[:-1] for e in m], d, 0.01, 100))
+    print('Вектор решений равен:')
+    print(solve([e[:-1] for e in m], d))
